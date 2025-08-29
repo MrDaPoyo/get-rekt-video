@@ -49,22 +49,46 @@ app.get("/", async (req) => {
             ["Using VPN", data2.security?.vpn ? "Yes" : "No"],
             ["Using Tor", data2.security?.tor ? "Yes" : "No"],
             ["Hosting", data2.security?.hosting ? "Yes" : "No"],
+            ["Threat Level", "high"],
+            ["Hacked?", "Definitely :P"],
+            ["WHO HACKED ME", "YO MOMMA"]
 		];
 
 		const bpm = 132;
 		const step = 60 / bpm;
 
-        const filters = entries
-            .map((text, i) => {
-				return `drawtext=text='${text[0] + " " + String(text[1])
-					.replace(/[:\\]/g, "\\$&")
-					.replace(/'/g, "\\'")}':x=(w-text_w)/2:y=(h-text_h)/4+${
-					i * 30
-				}:fontsize=24:fontcolor=black:enable='between(t,${
-					(i + 3.1 + 2.1) * step
-				},28)'`;
-            })
-            .join(",");
+        const offset = (5.2) * step;
+        const endTime = 28;
+        const spacing = 1;
+        const maxFont = 80;
+        const minFont = 4;
+
+        const esc = (s) =>
+            String(s)
+            .replace(/[:\\]/g, "\\$&")
+            .replace(/'/g, "\\'");
+
+        const parts = [];
+        for (let m = 0; m < entries.length; m++) {
+            const k = m + 1;
+            const tStart = offset + m * step;
+            const tEnd = m === entries.length - 1 ? endTime : offset + (m + 1) * step;
+
+            const fontSize = Math.max(minFont, Math.min(maxFont, Math.floor(500 / k)));
+
+            for (let i = 0; i < k; i++) {
+            const [label, value] = entries[i];
+            const text = `${label} ${value}`;
+            parts.push(
+                `drawtext=text='${esc(text)}':fontsize=${fontSize}:fontcolor=black:` +
+                `x=(w-text_w)/2:` +
+                `y=${i}*(h/${k}):` +
+                `enable='between(t,${tStart.toFixed(3)},${tEnd.toFixed(3)})'`
+            );
+            }
+        }
+
+        const filters = parts.join(",");
 
 		const inputVideo = "input.mp4";
 		const outputVideo = "output.mp4";
