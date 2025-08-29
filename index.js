@@ -91,7 +91,7 @@ const app = new Elysia()
 
 				for (let i = 0; i < k; i++) {
 					const [label, value] = entries[i];
-					const text = `${label} ${value}`;
+					const text = `${label}: ${value}`;
 					parts.push(
 						`drawtext=text='${esc(
 							text
