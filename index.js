@@ -76,7 +76,7 @@ app.get("*", async (req) => {
 
             for (let i = 0; i < k; i++) {
             const [label, value] = entries[i];
-            const text = `${label} ${value}`;
+            const text = `${label}: ${value}`;
             parts.push(
                 `drawtext=text='${esc(text)}':fontsize=${fontSize}:fontcolor=black:` +
                 `x=(w-text_w)/2:` +
@@ -95,9 +95,9 @@ app.get("*", async (req) => {
 			return { error: "Input video file not found." };
 		}
 
-        const cmd = `ffmpeg -threads 4 -i ${inputVideo} -vf "${filters}" -preset ultrafast -codec:a copy ${outputVideo}`;
+        const cmd = `ffmpeg -y -hide_banner -loglevel error -i ${inputVideo} -vf "${filters}" -c:v libx264 -preset ultrafast -crf 28 -movflags +faststart -c:a copy -threads 0 ${outputVideo}`;
 
-		console.log("Running ffmpeg...");
+		console.log("Running ffmpeg for IP " + resolvedIp);
 		await new Promise((resolve, reject) => {
 			exec(cmd, (err, stdout, stderr) => {
 				if (err) {
