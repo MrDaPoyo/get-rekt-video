@@ -4,7 +4,7 @@ import fs from "fs";
 
 const app = new Elysia();
 
-app.get("/", async (req) => {
+app.get("*", async (req) => {
 	const ip = req.query.ip || "localhost";
 	try {
 		const cfIp = req.headers["cf-connecting-ip"];
