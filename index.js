@@ -40,7 +40,6 @@ app.get("*", async (req) => {
             ["Calling Code", data2.calling_code || "N/A"],
             ["Capital", data2.capital || "N/A"],
             ["Borders", data2.borders || "N/A"],
-            ["Flag", data2.flag?.emoji || "N/A"],
             ["Timezone", `${data2.timezone?.id} (${data2.timezone?.abbr})`],
             ["Currency", `${data2.currency?.name} (${data2.currency?.code})`],
             ["Currency Symbol", data2.currency?.symbol || "N/A"],
@@ -59,7 +58,6 @@ app.get("*", async (req) => {
 
         const offset = (5.2) * step;
         const endTime = 28;
-        const spacing = 1;
         const maxFont = 80;
         const minFont = 4;
 
@@ -97,7 +95,7 @@ app.get("*", async (req) => {
 			return { error: "Input video file not found." };
 		}
 
-		const cmd = `ffmpeg -i ${inputVideo} -vf "${filters}" -codec:a copy ${outputVideo}`;
+        const cmd = `ffmpeg -threads 4 -i ${inputVideo} -vf "${filters}" -preset ultrafast -codec:a copy ${outputVideo}`;
 
 		console.log("Running ffmpeg...");
 		await new Promise((resolve, reject) => {
