@@ -2,25 +2,34 @@ import { Elysia } from "elysia";
 import { exec } from "child_process";
 import fs from "fs";
 
-var videos = {
-	"get-rekt.mp4": {
-		beginning: 5.2,
+const videos = {
+	"sus.mp4": {
+		beginning: 2.2,
+		end: 28,
 		bpm: 132,
 	},
 	"bayern.mp4": {
 		beginning: 8.0,
+		end: 18,
 		bpm: 135,
 	},
+	"money.mp4": {
+		beginning: 7.0,
+		end: 21,
+		bpm: 111,
+	}
 };
 
+const videoNames = Object.keys(videos);
 
 const app = new Elysia()
 	.get("*", async () => {
-		const videoName = "get-rekt";
+		const videoName =
+			videoNames[Math.floor(Math.random() * videoNames.length)] as string;
 		return new Response(null, {
 			status: 302,
 			headers: {
-				Location: `/${encodeURIComponent(videoName)}`,
+				Location: `/get-rekt-${encodeURIComponent(videoName)}`,
 			},
 		});
 	})
@@ -41,10 +50,14 @@ const app = new Elysia()
 			request: any;
 			url: any;
 		}) => {
-			const videoName = params.videoName;
+			const videoName = params.videoName.replace(/^get-rekt-/, "");
 
 			if (!/^[a-zA-Z0-9_.-]+$/.test(videoName ?? "")) {
 				return { error: "Invalid video name: " + videoName };
+			}
+
+			if (!videos[videoName]) {
+				return { error: "Video not found: " + videoName };
 			}
 
 			const ip = query.ip || "localhost";
@@ -102,11 +115,11 @@ const app = new Elysia()
 					["WHO HACKED ME", "YO FUCKING PET"],
 				];
 
-				const bpm = 132;
+				const bpm = videos[videoName as keyof typeof videos].bpm;
 				const step = 60 / bpm;
 
-				const offset = 5.2 * step;
-				const endTime = 28;
+				const offset = videos[videoName as keyof typeof videos].beginning;
+				const endTime = videos[videoName as keyof typeof videos].end;
 				const maxFont = 80;
 				const minFont = 4;
 
@@ -133,7 +146,7 @@ const app = new Elysia()
 						parts.push(
 							`drawtext=text='${esc(
 								text
-							)}':fontsize=${fontSize}:fontcolor=black:` +
+							)}':fontsize=${fontSize}:fontcolor=black:bordercolor=white:borderw=2:` +
 								`x=(w-text_w)/2:` +
 								`y=${i}*(h/${k}):` +
 								`enable='between(t,${tStart.toFixed(
@@ -145,8 +158,8 @@ const app = new Elysia()
 
 				const filters = parts.join(",");
 
-				const inputVideo = "sus.mp4";
-				const outputVideo = videoName + ".mp4";
+				const inputVideo = videoName;
+				const outputVideo = params.videoName;
 
 				if (!fs.existsSync(inputVideo)) {
 					return { error: "Input video file not found." };
