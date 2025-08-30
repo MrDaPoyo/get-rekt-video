@@ -39,7 +39,13 @@ const videos = {
 		end: 24.0,
 		bpm: 165,
 		fontSize: 40,
-	}
+	},
+	"shikanoko.mp4": {
+		beginning: 10.5,
+		end: 25.0,
+		bpm: 184,
+		fontSize: 40,
+	},
 };
 
 const videoNames = Object.keys(videos);
@@ -187,7 +193,7 @@ const app = new Elysia()
 					return { error: "Input video file not found." };
 				}
 
-				const cmd = `ffmpeg -y -hide_banner -loglevel error -i ${inputVideo} -vf "${filters}" -c:v libx264 -preset ultrafast -crf 28 -movflags +faststart -c:a copy -threads 0 ${outputVideo}`;
+				const cmd = `ffmpeg -y -hide_banner -loglevel error -i ${inputVideo} -vf "${filters}" -t ${videos[videoName as keyof typeof videos].end} -c:v libx264 -preset ultrafast -crf 28 -movflags +faststart -c:a copy -threads 1 -f mp4 ${outputVideo}`;
 				console.log("Running ffmpeg for IP ", resolvedIp);
 				await new Promise((resolve, reject) => {
 					exec(cmd, (err) => {
