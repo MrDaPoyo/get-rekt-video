@@ -2,7 +2,6 @@ import { Elysia } from "elysia";
 import { exec } from "child_process";
 import fs from "fs";
 import { join } from "path";
-import { createHash } from "crypto"; // Import Bun's crypto module
 
 const videos = {
 	"sus.mp4": {
@@ -95,7 +94,7 @@ const app = new Elysia()
 				const resolvedIp =
 					cfIp || (ip === "localhost" ? "1.1.1.1" : ip);
 
-				const hash = createHash("sha256").update(resolvedIp + Date.now()).digest("hex");
+				const hash = Bun.hash(resolvedIp + Date.now());
 				const tempOutputVideo = join("./videos", `${hash}.mp4`);
 
 				const res = await fetch(`http://ip-api.com/json/${resolvedIp}`);
