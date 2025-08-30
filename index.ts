@@ -33,6 +33,12 @@ const videos = {
 		end: 30.0,
 		bpm: 105,
 		fontSize: 10,
+	},
+	"doom.mp4": {
+		beginning: 3.0,
+		end: 24.0,
+		bpm: 165,
+		fontSize: 40,
 	}
 };
 
