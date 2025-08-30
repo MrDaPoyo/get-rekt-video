@@ -1,22 +1,32 @@
 import { Elysia } from "elysia";
 import { exec } from "child_process";
 import fs from "fs";
+import { join } from "path";
 
 const videos = {
 	"sus.mp4": {
 		beginning: 2.2,
 		end: 28,
 		bpm: 132,
+		fontSize: 40,
 	},
 	"bayern.mp4": {
 		beginning: 8.0,
 		end: 18,
 		bpm: 135,
+		fontSize: 40,
 	},
 	"money.mp4": {
 		beginning: 7.0,
 		end: 21,
 		bpm: 111,
+		fontSize: 40,
+	},
+	"meow.mp4": {
+		beginning: 3.0,
+		end: 23,
+		bpm: 168,
+		fontSize: 10,
 	}
 };
 
@@ -120,8 +130,8 @@ const app = new Elysia()
 
 				const offset = videos[videoName as keyof typeof videos].beginning;
 				const endTime = videos[videoName as keyof typeof videos].end;
-				const maxFont = 80;
-				const minFont = 4;
+				const maxFont = videos[videoName as keyof typeof videos].fontSize;
+				const minFont = 2;
 
 				const esc = (s: string) =>
 					String(s).replace(/[:\\]/g, "\\$&").replace(/'/g, "\\'");
@@ -158,7 +168,7 @@ const app = new Elysia()
 
 				const filters = parts.join(",");
 
-				const inputVideo = videoName;
+				const inputVideo = join("./videos/" + videoName);
 				const outputVideo = params.videoName;
 
 				if (!fs.existsSync(inputVideo)) {
