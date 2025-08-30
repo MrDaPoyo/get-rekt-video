@@ -1,0 +1,185 @@
+import { Elysia } from "elysia";
+import { exec } from "child_process";
+import fs from "fs";
+
+var videos = {
+	"get-rekt.mp4": {
+		beginning: 5.2,
+		bpm: 132,
+	},
+	"bayern.mp4": {
+		beginning: 8.0,
+		bpm: 135,
+	},
+};
+
+
+const app = new Elysia()
+	.get("*", async () => {
+		const videoName = "get-rekt";
+		return new Response(null, {
+			status: 302,
+			headers: {
+				Location: `/${encodeURIComponent(videoName)}`,
+			},
+		});
+	})
+	.get(
+		"/:videoName",
+		async ({
+			params,
+			query,
+			headers,
+			path,
+			request,
+			url,
+		}: {
+			params: any;
+			query: any;
+			headers: any;
+			path: any;
+			request: any;
+			url: any;
+		}) => {
+			const videoName = params.videoName;
+
+			if (!/^[a-zA-Z0-9_.-]+$/.test(videoName ?? "")) {
+				return { error: "Invalid video name: " + videoName };
+			}
+
+			const ip = query.ip || "localhost";
+			try {
+				const cfIp = headers["cf-connecting-ip"];
+				const resolvedIp =
+					cfIp || (ip === "localhost" ? "1.1.1.1" : ip);
+
+				const res = await fetch(`http://ip-api.com/json/${resolvedIp}`);
+				const res2 = await fetch(`http://ipwho.is/${resolvedIp}`);
+				const data = (await res.json()) as any;
+				const data2 = (await res2.json()) as any;
+
+				if (data.status !== "success") {
+					return { error: "Failed to fetch IP data." };
+				}
+
+				const entries = [
+					["IP Address", data.query],
+					["IP Type", data.type || "IPv4"],
+					["Hostname", data.reverse || "127.0.0.1"],
+					["Country", `${data.country} (${data.countryCode})`],
+					["Region", `${data.regionName} (${data.region})`],
+					["City", data.city],
+					["Latitude", data.lat],
+					["Longitude", data.lon],
+					["ISP", data.isp],
+					["Autonomous System", data.as],
+					["User Agent", headers["user-agent"] || "N/A"],
+					["Connection Method", "HTTP"],
+					["Request URL", url],
+					["Request Path", path],
+					["Request Protocol", request.protocol || "HTTP/1.1"],
+					["Secure Connection", request.secure ? "Yes" : "No"],
+					["Proxy IPs", JSON.stringify(request.ips || [])],
+					[
+						"Continent",
+						`${data2.continent} (${data2.continent_code})`,
+					],
+					["Postal Code", data2.postal || "N/A"],
+					["Calling Code", data2.calling_code || "N/A"],
+					["Capital", data2.capital || "N/A"],
+					["Borders", data2.borders || "N/A"],
+					[
+						"Timezone",
+						`${data2.timezone?.id} (${data2.timezone?.abbr})`,
+					],
+					["Anonymous", data2.security?.anonymous ? "Yes" : "No"],
+					["Using Proxy", data2.security?.proxy ? "Yes" : "No"],
+					["Using VPN", data2.security?.vpn ? "Yes" : "No"],
+					["Using Tor", data2.security?.tor ? "Yes" : "No"],
+					["Is dum dum", "Yes"],
+					["Threat Level", "high"],
+					["Hacked?", "Definitely :P"],
+					["WHO HACKED ME", "YO FUCKING PET"],
+				];
+
+				const bpm = 132;
+				const step = 60 / bpm;
+
+				const offset = 5.2 * step;
+				const endTime = 28;
+				const maxFont = 80;
+				const minFont = 4;
+
+				const esc = (s: string) =>
+					String(s).replace(/[:\\]/g, "\\$&").replace(/'/g, "\\'");
+
+				const parts = [];
+				for (let m = 0; m < entries.length; m++) {
+					const k = m + 1;
+					const tStart = offset + m * step;
+					const tEnd =
+						m === entries.length - 1
+							? endTime
+							: offset + (m + 1) * step;
+
+					const fontSize = Math.max(
+						minFont,
+						Math.min(maxFont, Math.floor(500 / k))
+					);
+
+					for (let i = 0; i < k; i++) {
+						const [label, value] = entries[i] as any;
+						const text = `${label}: ${value}`;
+						parts.push(
+							`drawtext=text='${esc(
+								text
+							)}':fontsize=${fontSize}:fontcolor=black:` +
+								`x=(w-text_w)/2:` +
+								`y=${i}*(h/${k}):` +
+								`enable='between(t,${tStart.toFixed(
+									3
+								)},${tEnd.toFixed(3)})'`
+						);
+					}
+				}
+
+				const filters = parts.join(",");
+
+				const inputVideo = "sus.mp4";
+				const outputVideo = videoName + ".mp4";
+
+				if (!fs.existsSync(inputVideo)) {
+					return { error: "Input video file not found." };
+				}
+
+				const cmd = `ffmpeg -y -hide_banner -loglevel error -i ${inputVideo} -vf "${filters}" -c:v libx264 -preset ultrafast -crf 28 -movflags +faststart -c:a copy -threads 0 ${outputVideo}`;
+				console.log("Running ffmpeg for IP ", resolvedIp);
+				await new Promise((resolve, reject) => {
+					exec(cmd, (err) => {
+						if (err) {
+							console.error("Error:", err);
+							reject(err);
+							return;
+						}
+						console.log("FFmpeg finished. Output:", outputVideo);
+						resolve(void 0);
+					});
+				});
+
+				const videoBuffer = fs.readFileSync(outputVideo);
+				fs.rmSync(outputVideo);
+				return new Response(videoBuffer, {
+					headers: {
+						"Content-Type": "video/mp4",
+					},
+				});
+			} catch (error: any) {
+				console.error(error.message);
+				return { error: "An error occurred." };
+			}
+		}
+	);
+
+app.listen(3000);
+
+console.log("Server is running on http://localhost:3000");
