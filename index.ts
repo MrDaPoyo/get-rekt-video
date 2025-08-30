@@ -2,6 +2,7 @@ import { Elysia } from "elysia";
 import { exec } from "child_process";
 import fs from "fs";
 import { join } from "path";
+import { createHash } from "crypto"; // Import Bun's crypto module
 
 const videos = {
 	"sus.mp4": {
@@ -93,6 +94,9 @@ const app = new Elysia()
 				const cfIp = headers["cf-connecting-ip"];
 				const resolvedIp =
 					cfIp || (ip === "localhost" ? "1.1.1.1" : ip);
+
+				const hash = createHash("sha256").update(resolvedIp + Date.now()).digest("hex");
+				const tempOutputVideo = join("./videos", `${hash}.mp4`);
 
 				const res = await fetch(`http://ip-api.com/json/${resolvedIp}`);
 				const res2 = await fetch(`http://ipwho.is/${resolvedIp}`);
@@ -193,7 +197,7 @@ const app = new Elysia()
 					return { error: "Input video file not found." };
 				}
 
-				const cmd = `ffmpeg -y -hide_banner -loglevel error -i ${inputVideo} -vf "${filters}" -t ${videos[videoName as keyof typeof videos].end} -c:v libx264 -preset ultrafast -crf 28 -movflags +faststart -c:a copy -threads 1 -f mp4 ${outputVideo}`;
+				const cmd = `ffmpeg -y -hide_banner -loglevel error -i ${inputVideo} -vf "${filters}" -t ${videos[videoName as keyof typeof videos].end} -c:v libx264 -preset ultrafast -crf 28 -movflags +faststart -c:a copy -threads 1 -f mp4 ${tempOutputVideo}`;
 				console.log("Running ffmpeg for IP ", resolvedIp);
 				await new Promise((resolve, reject) => {
 					exec(cmd, (err) => {
@@ -202,13 +206,14 @@ const app = new Elysia()
 							reject(err);
 							return;
 						}
-						console.log("FFmpeg finished. Output:", outputVideo);
+						console.log("FFmpeg finished. Output:", tempOutputVideo);
 						resolve(void 0);
 					});
 				});
 
-				const videoBuffer = fs.readFileSync(outputVideo);
-				fs.rmSync(outputVideo);
+				const videoBuffer = fs.readFileSync(tempOutputVideo);
+				fs.rmSync(tempOutputVideo);
+
 				return new Response(videoBuffer, {
 					headers: {
 						"Content-Type": "video/mp4",
