@@ -209,6 +209,6 @@ const app = new Elysia()
 		}
 	);
 
-app.listen(3000);
+app.listen(process.argv[2] || 3000);
 
-console.log("Server is running on http://localhost:3000");
+console.log("GET REKT!!! is running on http://localhost:" + (process.argv[2] || 3000));
