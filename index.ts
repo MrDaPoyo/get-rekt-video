@@ -190,7 +190,7 @@ const app = new Elysia()
 					return { error: "Input video file not found." };
 				}
 
-				const cmd = `ffmpeg -y -hide_banner -loglevel error -i ${inputVideo} -vf "${filters}" -t ${videos[videoName as keyof typeof videos].end} -c:v libx264 -preset ultrafast -crf 28 -movflags +faststart -c:a copy -threads 1 -f mp4 ${tempOutputVideo}`;
+				const cmd = `ffmpeg -y -hide_banner -loglevel error -i ${inputVideo} -vf "${filters}" -t ${videos[videoName as keyof typeof videos].end} -c:v libx264 -preset ultrafast -crf 20 -movflags +faststart -c:a copy -threads 1 -f mp4 ${tempOutputVideo}`;
 				console.log("Running ffmpeg for IP ", resolvedIp);
 				await new Promise((resolve, reject) => {
 					exec(cmd, (err) => {
