@@ -28,12 +28,6 @@ const videos = {
 		bpm: 168,
 		fontSize: 10,
 	},
-	"whopper.mp4": {
-		beginning: 6.0,
-		end: 30.0,
-		bpm: 105,
-		fontSize: 10,
-	},
 	"doom.mp4": {
 		beginning: 3.0,
 		end: 24.0,
