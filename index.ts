@@ -190,7 +190,9 @@ const app = new Elysia()
 					return { error: "Input video file not found." };
 				}
 
-				const cmd = `ffmpeg -y -hide_banner -loglevel error -i ${inputVideo} -vf "${filters}" -t ${videos[videoName as keyof typeof videos].end} -c:v libx264 -preset ultrafast -crf 20 -movflags +faststart -c:a copy -threads 1 -f mp4 ${tempOutputVideo}`;
+				const isCudaAvailable = fs.existsSync("/usr/local/cuda/bin/nvcc") || process.env.NV_CUDA_PATH;
+				const encoder = isCudaAvailable ? "h264_nvenc" : "libx264";
+				const cmd = `ffmpeg -y -hide_banner -loglevel error -i ${inputVideo} -vf "${filters}" -t ${videos[videoName as keyof typeof videos].end} -c:v ${encoder} -preset fast -crf 20 -movflags +faststart -c:a copy -threads 1 -f mp4 ${tempOutputVideo}`;
 				console.log("Running ffmpeg for IP ", resolvedIp);
 				await new Promise((resolve, reject) => {
 					exec(cmd, (err) => {
