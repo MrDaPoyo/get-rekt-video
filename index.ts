@@ -190,9 +190,33 @@ const app = new Elysia()
 					return { error: "Input video file not found." };
 				}
 
-				const isCudaAvailable = fs.existsSync("/usr/local/cuda/bin/nvcc") || process.env.NV_CUDA_PATH;
-				const encoder = isCudaAvailable ? "h264_nvenc" : "libx264";
-				const cmd = `ffmpeg -y -hide_banner -loglevel error -i ${inputVideo} -vf "${filters}" -t ${videos[videoName as keyof typeof videos].end} -c:v ${encoder} -preset fast -crf 20 -movflags +faststart -c:a copy -threads 1 -f mp4 ${tempOutputVideo}`;
+				const runCmd = (cmd: string) =>
+					new Promise<string>((resolve, reject) => {
+						exec(cmd, (err, stdout, stderr) => {
+							if (err) {
+								return reject(stderr || err);
+							}
+							resolve(stdout || "");
+						});
+					});
+
+				let useNvenc = false;
+				try {
+					const encoders = await runCmd("ffmpeg -encoders");
+					useNvenc = /h264_nvenc|hevc_nvenc|nvenc/i.test(encoders);
+				} catch (e) {
+					useNvenc = false;
+				}
+
+				let cmd: string;
+				if (useNvenc) {
+					cmd = `ffmpeg -y -hide_banner -loglevel error -hwaccel cuda -hwaccel_output_format cuda -i ${inputVideo} -vf "${filters}" -t ${videos[videoName as keyof typeof videos].end} -c:v h264_nvenc -preset fast -rc vbr -cq 20 -movflags +faststart -c:a copy -threads 1 -f mp4 ${tempOutputVideo}`;
+					console.log("FFmpeg: using NVENC/CUDA acceleration");
+				} else {
+					cmd = `ffmpeg -y -hide_banner -loglevel error -i ${inputVideo} -vf "${filters}" -t ${videos[videoName as keyof typeof videos].end} -c:v libx264 -preset fast -crf 20 -movflags +faststart -c:a copy -threads 1 -f mp4 ${tempOutputVideo}`;
+					console.log("FFmpeg: nvenc not detected, using libx264 (software)");
+				}
+
 				console.log("Running ffmpeg for IP ", resolvedIp);
 				await new Promise((resolve, reject) => {
 					exec(cmd, (err) => {
